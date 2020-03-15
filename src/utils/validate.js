@@ -14,7 +14,7 @@ export function stripscript(str) {
  * 验证邮箱
  */
 export function validateNull(value) {
-    return !(value == null || value.length == 0);
+    return (value == null || value.length == 0);
 }
 
 /**

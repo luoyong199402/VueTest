@@ -14,7 +14,7 @@
                         <el-input v-model="loginData.code" type="text" maxlength="6" autocomplete="off"></el-input>
                     </el-col>
                     <el-col :span="9">
-                        <el-button type="success">获取验证码</el-button>
+                        <el-button type="success" @click="getCode">获取验证码</el-button>
                     </el-col>
                 </el-row>
             </el-form-item>
@@ -35,12 +35,13 @@
         validateCode,
 
     } from "@/utils/validate";
+    import {login, getSms} from "../../api/login";
 
     export default {
         name: "LoginPage",
         data() {
             const validateUserName = (rule, value, callback) => {
-                if (!validateNull(value)) {
+                if (validateNull(value)) {
                     callback(new Error('邮箱不能空！'));
                 }
 
@@ -51,7 +52,7 @@
             };
 
             const validatePassword = (rule, value, callback) => {
-                if (!validateNull(value)) {
+                if (validateNull(value)) {
                     callback(new Error('密码不能为空！'));
                 }
 
@@ -62,7 +63,7 @@
             };
 
             const validateFormCode = (rule, value, callback) => {
-                if (!validateNull(value)) {
+                if (validateNull(value)) {
                     callback(new Error('验证码不能为空！'));
                 }
 
@@ -78,8 +79,8 @@
 
             return {
                 loginData: {
-                    username: '',
-                    password: '',
+                    username: '1624787124@qq.com',
+                    password: '123456',
                     code: ''
                 },
                 loginRules: {
@@ -99,7 +100,13 @@
             onSubmit(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
-                        alert('submit!');
+                        login(this.loginData).then(response => {
+                            console.log(response);
+                        }).catch(error => {
+                            console.log(error);
+                        })
+
+
                     } else {
                         this.$message({
                             message: '表单验证失败，请检查表单信息！',
@@ -107,6 +114,32 @@
                         });
                         return false;
                     }
+                });
+            },
+            getCode() {
+                let email = this.loginData.username;
+                // 验证为空
+                if (validateNull(email)) {
+                    this.$message({
+                        message: '请输入邮箱！',
+                        type: 'warning'
+                    });
+                    return ;
+                }
+
+                // 验证邮箱合法性
+                if (!validateEmail(email)) {
+                    this.$message({
+                        message: '输入的邮箱不是一个合法的邮箱！',
+                        type: 'warning'
+                    });
+                    return ;
+                }
+
+                getSms({businessKey: email, type: 'EMAIL', scope: 'REGISTER'}).then(response => {
+                    this.loginData.code = response.data.code;
+                }).catch(response => {
+                    console.log(response);
                 });
             }
         }
