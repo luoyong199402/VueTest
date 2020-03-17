@@ -14,7 +14,7 @@
                         <el-input v-model="loginData.code" type="text" maxlength="6" autocomplete="off"></el-input>
                     </el-col>
                     <el-col :span="9">
-                        <el-button type="success" @click="getCode">获取验证码</el-button>
+                        <el-button type="success" @click="getCode" :disabled="pageState.verificationCodeButton.disabled" >{{ pageState.verificationCodeButton.currentButtonName }}</el-button>
                     </el-col>
                 </el-row>
             </el-form-item>
@@ -78,6 +78,41 @@
             };
 
             return {
+                pageState: {
+                    verificationCodeButton: {
+                        disabled: false,
+                        lock: false,
+                        lockTime: -1,
+                        initButtonName: '获取验证码',
+                        currentButtonName: '获取验证码',
+                        lockTimerFunc: () => {
+                           if (this.pageState.verificationCodeButton.lockTimer == null) {
+                               this.pageState.verificationCodeButton.lockTimer = setInterval(this.pageState.verificationCodeButton.lockTimerFunc, 1000);
+                               this.pageState.verificationCodeButton.currentButtonName = 60;
+                           } else {
+                               if (this.pageState.verificationCodeButton.lockTime > 0 && this.pageState.verificationCodeButton.lock) {
+                                   this.pageState.verificationCodeButton.lockTime--;
+                                   this.pageState.verificationCodeButton.currentButtonName = this.pageState.verificationCodeButton.lockTime;
+                               } else {
+                                   this.pageState.verificationCodeButton.lock = false;
+                                   this.pageState.verificationCodeButton.disabled = false;
+                                   this.pageState.verificationCodeButton.lockTime = -1;
+                                   this.pageState.verificationCodeButton.lockTimer = null;
+                                   this.pageState.verificationCodeButton.currentButtonName = this.pageState.verificationCodeButton.initButtonName;
+                               }
+                           }
+                        },
+                        startLock: () => {
+                            this.pageState.verificationCodeButton.lock = true;
+                            this.pageState.verificationCodeButton.disabled = true;
+                            this.pageState.verificationCodeButton.lockTime = 60;
+                            this.pageState.verificationCodeButton.lockTimer = null;
+                            this.pageState.verificationCodeButton.lockTimerFunc();
+                        },
+                        lockTimer: null
+                    }
+                },
+
                 loginData: {
                     username: '1624787124@qq.com',
                     password: '123456',
@@ -101,12 +136,9 @@
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
                         login(this.loginData).then(response => {
-                            console.log(response);
-                        }).catch(error => {
-                            console.log(error);
-                        })
-
-
+                            alert(response.data.data.token);
+                            this.$store.commit('setToken', response.data.data);
+                        });
                     } else {
                         this.$message({
                             message: '表单验证失败，请检查表单信息！',
@@ -136,11 +168,25 @@
                     return ;
                 }
 
+                this.pageState.verificationCodeButton.disabled = true;
                 getSms({businessKey: email, type: 'EMAIL', scope: 'REGISTER'}).then(response => {
                     this.loginData.code = response.data.code;
+                    // 执行锁定操作
+                    this.pageState.verificationCodeButton.startLock();
                 }).catch(response => {
                     console.log(response);
+                }).finally(() => {
+                    this.pageState.verificationCodeButton.disabled = false;
                 });
+            }
+        },
+        watch: {
+            "loginData.username": function(newVal) {
+                if (validateEmail(newVal)) {
+                    this.pageState.verificationCodeButton.disabled = false;
+                } else {
+                    this.pageState.verificationCodeButton.disabled = true;
+                }
             }
         }
     }

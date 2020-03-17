@@ -1,5 +1,5 @@
 import axios from "axios";
-
+import { Message } from 'element-ui';
 
 const BASE_URL = "http://localhost:8888";
 const service = axios.create(
@@ -18,6 +18,10 @@ service.interceptors.request.use(
         return config;
     },
     function (error) {
+        Message({
+            message: '请求接口失败！ ' + error,
+            type: 'warning'
+        });
         return Promise.reject(error);
     }
 );
@@ -28,14 +32,27 @@ service.interceptors.request.use(
 service.interceptors.response.use(
     function (response) {
         let data = response.data;
-        if (response.status == 200 && data.code == 0) {
-            return Promise.reject(data);
+        if (response.status == 200) {
+            return response;
         } else {
+             Message({
+                    message: '服务端处理请求失败！ ' + response.data.msg,
+                    type: 'warning'
+            });
             console.log(data);
-            return  response;
+            return Promise.reject(data);
         }
     },
     function (error) {
+        let msg = error;
+        if (error.response && error.response.data && error.response.data.msg) {
+            msg = error.response.data.msg;
+        }
+        Message({
+            message: '服务端处理请求失败！ ' + msg,
+            type: 'warning'
+        });
+        console.log(error);
         return Promise.reject(error);
     }
 );
