@@ -14,7 +14,7 @@
                         <el-input v-model="loginData.code" type="text" maxlength="6" autocomplete="off"></el-input>
                     </el-col>
                     <el-col :span="9">
-                        <el-button type="success" @click="getCode" :disabled="pageState.verificationCodeButton.disabled" >{{ pageState.verificationCodeButton.currentButtonName }}</el-button>
+                        <el-button type="success" class="width-full" @click="getCode" :disabled="pageState.verificationCodeButton.disabled" >{{ pageState.verificationCodeButton.currentButtonName }}</el-button>
                     </el-col>
                 </el-row>
             </el-form-item>
@@ -93,7 +93,9 @@
                                if (this.pageState.verificationCodeButton.lockTime > 0 && this.pageState.verificationCodeButton.lock) {
                                    this.pageState.verificationCodeButton.lockTime--;
                                    this.pageState.verificationCodeButton.currentButtonName = this.pageState.verificationCodeButton.lockTime;
+                                   this.pageState.verificationCodeButton.disabled = true;
                                } else {
+                                   clearInterval(this.pageState.verificationCodeButton.lockTimer)
                                    this.pageState.verificationCodeButton.lock = false;
                                    this.pageState.verificationCodeButton.disabled = false;
                                    this.pageState.verificationCodeButton.lockTime = -1;
@@ -103,6 +105,7 @@
                            }
                         },
                         startLock: () => {
+                            clearInterval(this.pageState.verificationCodeButton.lockTimer)
                             this.pageState.verificationCodeButton.lock = true;
                             this.pageState.verificationCodeButton.disabled = true;
                             this.pageState.verificationCodeButton.lockTime = 60;
@@ -174,9 +177,8 @@
                     // 执行锁定操作
                     this.pageState.verificationCodeButton.startLock();
                 }).catch(response => {
-                    console.log(response);
-                }).finally(() => {
                     this.pageState.verificationCodeButton.disabled = false;
+                    console.log(response);
                 });
             }
         },
@@ -188,6 +190,9 @@
                     this.pageState.verificationCodeButton.disabled = true;
                 }
             }
+        },
+        beforeDestroy() {
+            clearInterval(this.pageState.verificationCodeButton.lockTimer);
         }
     }
 </script>
