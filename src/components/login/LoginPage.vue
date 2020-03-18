@@ -14,7 +14,7 @@
                         <el-input v-model="loginData.code" type="text" maxlength="6" autocomplete="off"></el-input>
                     </el-col>
                     <el-col :span="9">
-                        <el-button type="success" @click="getCode" :disabled="pageState.verificationCodeButton.disabled" >{{ pageState.verificationCodeButton.currentButtonName }}</el-button>
+                        <el-button type="success" class="width-full" @click="getCode" :loading="pageState.verificationCodeButton.loading" :disabled="pageState.verificationCodeButton.disabled" >{{ pageState.verificationCodeButton.currentButtonName }}</el-button>
                     </el-col>
                 </el-row>
             </el-form-item>
@@ -80,6 +80,7 @@
             return {
                 pageState: {
                     verificationCodeButton: {
+                        loading: false,
                         disabled: false,
                         lock: false,
                         lockTime: -1,
@@ -88,21 +89,22 @@
                         lockTimerFunc: () => {
                            if (this.pageState.verificationCodeButton.lockTimer == null) {
                                this.pageState.verificationCodeButton.lockTimer = setInterval(this.pageState.verificationCodeButton.lockTimerFunc, 1000);
-                               this.pageState.verificationCodeButton.currentButtonName = 60;
                            } else {
                                if (this.pageState.verificationCodeButton.lockTime > 0 && this.pageState.verificationCodeButton.lock) {
                                    this.pageState.verificationCodeButton.lockTime--;
-                                   this.pageState.verificationCodeButton.currentButtonName = this.pageState.verificationCodeButton.lockTime;
+                                   this.pageState.verificationCodeButton.currentButtonName = '剩余时间：' + this.pageState.verificationCodeButton.lockTime;
                                } else {
                                    this.pageState.verificationCodeButton.lock = false;
                                    this.pageState.verificationCodeButton.disabled = false;
                                    this.pageState.verificationCodeButton.lockTime = -1;
                                    this.pageState.verificationCodeButton.lockTimer = null;
                                    this.pageState.verificationCodeButton.currentButtonName = this.pageState.verificationCodeButton.initButtonName;
+                                   clearInterval(this.pageState.verificationCodeButton.lockTimer);
                                }
                            }
                         },
                         startLock: () => {
+                            clearInterval(this.pageState.verificationCodeButton.lockTimer);
                             this.pageState.verificationCodeButton.lock = true;
                             this.pageState.verificationCodeButton.disabled = true;
                             this.pageState.verificationCodeButton.lockTime = 60;
@@ -169,14 +171,18 @@
                 }
 
                 this.pageState.verificationCodeButton.disabled = true;
+                this.pageState.verificationCodeButton.loading = true;
+                this.pageState.verificationCodeButton.currentButtonName = "获取中"
                 getSms({businessKey: email, type: 'EMAIL', scope: 'REGISTER'}).then(response => {
                     this.loginData.code = response.data.code;
                     // 执行锁定操作
                     this.pageState.verificationCodeButton.startLock();
                 }).catch(response => {
                     console.log(response);
-                }).finally(() => {
                     this.pageState.verificationCodeButton.disabled = false;
+                    this.pageState.verificationCodeButton.currentButtonName = this.pageState.verificationCodeButton.initButtonName;
+                }).finally(() => {
+                    this.pageState.verificationCodeButton.loading = false;
                 });
             }
         },
@@ -188,6 +194,9 @@
                     this.pageState.verificationCodeButton.disabled = true;
                 }
             }
+        },
+        beforeDestroy() {
+            clearInterval(this.pageState.verificationCodeButton.lockTimer);
         }
     }
 </script>

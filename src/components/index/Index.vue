@@ -1,17 +1,25 @@
 <template>
-    <div class="index">
-        index page
+    <div>
+        <LayoutHeader></LayoutHeader>
+        <layout-nav></layout-nav>
+        <layout-main></layout-main>
     </div>
+
 </template>
 
 <script>
-export default {
-    name: "index"
-}
+import LayoutHeader from "./child/LayoutHeader";
+import LayoutMain from "./child/LayoutMain";
+import LayoutNav from "./child/LayoutNav";
 
+export default {
+    name: "index",
+    components: {LayoutNav, LayoutMain, LayoutHeader}
+}
 
 </script>
 
 
 <style lang="scss" scoped>
+
 </style>
