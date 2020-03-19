@@ -19,7 +19,7 @@
                 </el-row>
             </el-form-item>
             <el-form-item>
-                <el-button type="danger" @click="onSubmit('loginForm')" class="login-btn width-full">登录</el-button>
+                <el-button type="danger" :loading="pageState.loginButton.loading" @click="onSubmit('loginForm')" class="login-btn width-full">登录</el-button>
             </el-form-item>
         </el-form>
     </div>
@@ -112,6 +112,9 @@
                             this.pageState.verificationCodeButton.lockTimerFunc();
                         },
                         lockTimer: null
+                    },
+                    loginButton: {
+                        loading: false
                     }
                 },
 
@@ -137,9 +140,12 @@
             onSubmit(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
+                        this.pageState.loginButton.loading = true;
                         login(this.loginData).then(response => {
                             alert(response.data.data.token);
                             this.$store.commit('setToken', response.data.data);
+                        }).finally(() => {
+                            this.pageState.loginButton.loading = false;
                         });
                     } else {
                         this.$message({

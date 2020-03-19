@@ -1,7 +1,7 @@
 <template>
-    <div>
-        <LayoutHeader></LayoutHeader>
-        <layout-nav></layout-nav>
+    <div :class="[openState ? 'open' : 'close']">
+        <LayoutHeader @changeMenu="changeMenu" @exit="exit"></LayoutHeader>
+        <layout-nav :open-state="openState"></layout-nav>
         <layout-main></layout-main>
     </div>
 
@@ -11,14 +11,45 @@
 import LayoutHeader from "./child/LayoutHeader";
 import LayoutMain from "./child/LayoutMain";
 import LayoutNav from "./child/LayoutNav";
+import {logout} from "@/api/login";
+import {getUserInfo} from "@/api/user";
 
 export default {
     name: "index",
-    components: {LayoutNav, LayoutMain, LayoutHeader}
+    components: {LayoutNav, LayoutMain, LayoutHeader},
+    data() {
+        getUserInfo().then((response) => {
+            this.$store.commit("setUserInfo", response.data.principal);
+        });
+
+        return {
+            openState: true
+        };
+    },
+    methods: {
+        changeMenu() {
+            this.openState = !this.openState;
+        },
+
+        exit() {
+            const loading = this.$loading({
+                lock: true,
+                text: '退出中， 请稍后！',
+                spinner: 'el-icon-loading',
+                background: 'rgba(0, 0, 0, 0.7)'
+            });
+
+            logout().then(() => {
+                this.$store.commit('clearToken');
+                alert("路由跳转！");
+            }).finally(() => {
+                loading.close();
+            });
+        }
+    }
 }
 
 </script>
-
 
 <style lang="scss" scoped>
 

@@ -8,9 +8,9 @@
 export default {
   name: "svgIcon",
   data() {
-    const msg = ref("手把手撸码的说法的前端");
+    const msg = "手把手撸码的说法的前端";
     // 计算属性，得出最终结果，并返回
-    const iconName = `#icon-${this.props.iconClass}`;
+    const iconName = `#icon-${this.iconClass}`;
     const svgClass = this.className ? `svg-icon ${this.className}` : `svg-icon`;
     return {
       msg,

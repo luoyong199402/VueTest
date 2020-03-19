@@ -1,5 +1,6 @@
 import axios from "axios";
 import { Message } from 'element-ui';
+import store from '../store/index';
 
 const BASE_URL = "http://localhost:8888";
 const service = axios.create(
@@ -14,7 +15,7 @@ const service = axios.create(
  */
 service.interceptors.request.use(
     function (config) {
-        // config.headers["Authorized"] = "123";
+        config.headers["Authorized"] = store.state.token;
         return config;
     },
     function (error) {

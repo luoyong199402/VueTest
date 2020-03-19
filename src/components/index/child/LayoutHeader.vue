@@ -1,12 +1,12 @@
 <template>
     <div id="header-wrap">
-        <div class="pull-left header-icon"><svg-icon iconClass="menu" className="menu" /></div>
+        <div class="pull-left header-icon" @click="changeMenu"><svg-icon iconClass="menu" className="menu" /></div>
         <div class="pull-right">
             <div class="user-info pull-left">
-                <!--<img src="../../../assets/images/face.jpg" alt="">-->
-                用户名
+                <img src="../../../assets/images/face.jpg" alt="">
+                {{ userInfo.username }}
             </div>
-            <div class="header-icon pull-left">
+            <div class="header-icon pull-left" @click="exit">
               <svg-icon iconClass="exit" className="exit" />
             </div>
         </div>
@@ -15,16 +15,40 @@
 
 <script>
     export default {
-        name: "LayoutHeader"
+        name: "LayoutHeader",
+        methods: {
+            changeMenu: function () {
+                this.$emit("changeMenu");
+            },
+            exit: function () {
+                this.$emit("exit");
+            }
+        },
+        computed: {
+            userInfo() {
+                return this.$store.state.userInfo;
+            }
+        }
     }
 </script>
 
 <style lang="scss" scoped>
+    #header-wrap {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: $navMenu;
+        height: 75px;
+        background-color: #fff;
+        line-height: 75px;
+        @include webkit(box-shadow, 0 3px 16px 0 rgba(0, 0, 0, .1));
+        @include webkit(transition, all .3s ease 0s);
+    }
     .open {
-        #header-wrap { left: 111px; }
+        #header-wrap { left: $navMenu; }
     }
     .close {
-        #header-wrap { left: 20px; }
+        #header-wrap { left: $navMenuMin; }
     }
 
     .header-icon {

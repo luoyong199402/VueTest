@@ -13,8 +13,5 @@ const req = require.context("./svg", false, /\.svg$/); // 正则里面表示结�
 const requireAll = requireContext => {
   return requireContext.keys().map(requireContext);
 };
-// es5
-// const requireAll = function(requireContext ){
-//     return requireContext.keys().map(requireContext)
-// }
+
 requireAll(req);

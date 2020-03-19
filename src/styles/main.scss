@@ -1,3 +1,12 @@
 @import "normalize";
 @import "element-ui";
+@import "config";
 
+.pull-left { float: left; }
+.pull-right { float: right; }
+.width-full {
+  width: 100%;
+}
+
+
+.black-space-30 { height: 30px; }
