@@ -7,6 +7,7 @@ import store from './store/index';
 
 // 自定义全局组件
 import "./icons";
+import './router/premit'
 
 Vue.config.productionTip = false
 

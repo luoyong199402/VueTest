@@ -142,8 +142,10 @@
                     if (valid) {
                         this.pageState.loginButton.loading = true;
                         login(this.loginData).then(response => {
-                            alert(response.data.data.token);
                             this.$store.commit('setToken', response.data.data);
+                            this.$router.push({
+                                name: "Index"
+                            });
                         }).finally(() => {
                             this.pageState.loginButton.loading = false;
                         });

@@ -5,15 +5,12 @@ import {getUserInfo} from "@/api/user";
 
 Vue.use(Vuex);
 
-alert( localStorage.getItem("userInfo"))
-console.log( localStorage.getItem("userInfo"))
-
 const store = new Vuex.Store({
     state: {
         token: cookieJS.get("token.token", ""),
         createTime: cookieJS.get("token.createTime", ""),
         expirationDate: cookieJS.get("token.expirationDate", ""),
-        userInfo: getLocalStorage("userInfo")
+        userInfo: getLocalStorage("userInfo") || {}
     },
 
     mutations: {
@@ -54,8 +51,14 @@ const store = new Vuex.Store({
     }
 });
 
-const getLocalStorage = (key) => {
-    return "{}";
+function getLocalStorage(key) {
+    let userInfoStr = localStorage.getItem(key)
+
+    if (userInfoStr == null || userInfoStr === '' || userInfoStr === 'undefined') {
+        return null
+    } else {
+        return JSON.parse(userInfoStr);
+    }
 }
 
 export default store;
