@@ -8,8 +8,9 @@
                 background-color="#344a5f"
                 text-color="#fff"
                 active-text-color="#ffd04b"
-                :collapse="!openState">
-            <el-menu-item index="1">
+                :collapse="!openState"
+                router>
+            <el-menu-item :index="'/index'">
                 <i class="el-icon-location"></i>
                 <span>控制台</span>
             </el-menu-item>
@@ -18,10 +19,10 @@
                     <i class="el-icon-menu"></i>
                     <span slot="title">信息管理</span>
                 </template>
-                <el-menu-item index="2-1">选项1</el-menu-item>
-                <el-menu-item index="2-2">选项2</el-menu-item>
+                <el-menu-item :index="'/info/list'">信息列表</el-menu-item>
+                <el-menu-item :index="'/info/type'">信息分类</el-menu-item>
             </el-submenu>
-            <el-menu-item index="3">
+            <el-menu-item :index="'/userIndex'">
                 <i class="el-icon-document"></i>
                 <span slot="title">用户管理</span>
             </el-menu-item>

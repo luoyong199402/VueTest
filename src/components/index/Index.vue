@@ -32,18 +32,27 @@ export default {
         },
 
         exit() {
-            const loading = this.$loading({
-                lock: true,
-                text: '退出中， 请稍后！',
-                spinner: 'el-icon-loading',
-                background: 'rgba(0, 0, 0, 0.7)'
-            });
+            this.$confirm('你即将退出系统， 请确认是否继续！', '提示', {
+                confirmButtonText: '退出',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                const loading = this.$loading({
+                    lock: true,
+                    text: '退出中， 请稍后！',
+                    spinner: 'el-icon-loading',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                });
 
-            logout().then(() => {
-                this.$store.commit('clearToken');
-                alert("路由跳转！");
-            }).finally(() => {
-                loading.close();
+                logout().then(() => {
+                    this.$store.commit('clearToken');
+                    this.$store.commit('clearUserInfo');
+                    this.$router.push({
+                        name: "loginPage"
+                    });
+                }).finally(() => {
+                    loading.close();
+                });
             });
         }
     }

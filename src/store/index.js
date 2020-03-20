@@ -38,15 +38,14 @@ const store = new Vuex.Store({
         },
         clearUserInfo(state) {
             state.userInfo = {};
+            localStorage.removeItem("userInfo")
         }
     },
 
     actions: {
-        setUserInfo({context}) {
-            debugger;
-            getUserInfo().then(function(response) {
-                context.commit(response.data);
-            });
+        exit({context}) {
+            context.commit("clearToken");
+            context.commit("clearUserInfo");
         }
     }
 });
