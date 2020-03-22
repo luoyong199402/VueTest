@@ -62,6 +62,8 @@
                     :height="tableHeight"
                     style="width: 100%;">
                 <el-table-column
+                        align="center"
+                        header-align="center"
                         type="selection"
                         width="55">
                 </el-table-column>
@@ -70,7 +72,7 @@
                         header-align="center"
                         label="标题"
                         width="120">
-                    <template slot-scope="scope">{{ scope.row.date }}</template>
+                    <template slot-scope="scope">123</template>
                 </el-table-column>
                 <el-table-column
                         align="center"

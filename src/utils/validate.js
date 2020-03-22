@@ -51,8 +51,8 @@ export function validateMinLength(value, length) {
  * 验证字符串为数字
  */
 export function validateNumber(value) {
-    let reg = /^-?d+$/;
-    return reg.test(value) ? true : false;
+    let re = /^[0-9]+$/ ;
+    return re.test(value)
 }
 
 /**

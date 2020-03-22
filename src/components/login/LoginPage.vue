@@ -225,4 +225,10 @@
     .item-from {
         margin-bottom: 13px;
     }
+
+    .el-form-item /deep/ {
+        label {
+            color: #fff;
+        }
+    }
 </style>
