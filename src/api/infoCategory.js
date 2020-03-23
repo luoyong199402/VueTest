@@ -26,6 +26,14 @@ export function deleteInfoCategory(id) {
 }
 
 
+export function updateInfoCategory(id, data) {
+    return service.request({
+        method: "put",
+        url: "/api/info/category/" + id,
+        data
+    });
+}
+
 /**
  * 获取指定层级的分类
  */

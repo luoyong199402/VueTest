@@ -35,7 +35,7 @@
                         <el-input type="number" v-model="formData.sort"></el-input>
                     </el-form-item>
                     <el-form-item>
-                        <el-button type="primary" :loading="formState.saveButtonLoading" @click="onSubmit('categoryForm')">保存</el-button>
+                        <el-button type="primary" :loading="formState.saveButtonLoading" @click="onSubmit('categoryForm')">{{ formDesc.saveButtonName }}</el-button>
                     </el-form-item>
                 </el-form>
             </el-col>
@@ -49,6 +49,7 @@
     import {
         addInfoCategory,
         deleteInfoCategory,
+        updateInfoCategory,
         getInfoCategoryListByLevel,
         getInfoCategoryListByParentId
     } from "../../api/infoCategory";
@@ -118,10 +119,12 @@
                     level: 1
                 },
                 formDesc: {
-                    categoryLevelName: '添加一级分类'
+                    categoryLevelName: '添加一级分类',
+                    saveButtonName: '保存'
                 },
                 formState: {
-                    saveButtonLoading: false
+                    saveButtonLoading: false,
+                    formOpt: 'add'
                 },
 
             }
@@ -147,7 +150,6 @@
             },
 
             isTreeLeaf(data, node) {
-                debugger;
                 if (node.level== 1) {
                     return true;
                 }
@@ -155,22 +157,22 @@
             },
 
             treeNodeClick(data, node, tree) {
-                this.editCategory(data, node);
+                this.editCategoryBtn(data);
             },
 
             addCategoryLevelOne() {
                 this.formDesc.categoryLevelName = '添加一级分类'
                 this.formData.level = 1;
                 this.formData.parentId = '';
+                this.formState.formOpt = "add";
 
             },
 
             addCategoryLevelTwo(data, node) {
-                debugger
                 this.formDesc.categoryLevelName = '添加二级分类'
                 this.formData.level = 2;
                 this.formData.parentId = data.id;
-                return false;
+                this.formState.formOpt = "add";
             },
 
             addTreeNode(parentId, data) {
@@ -180,13 +182,28 @@
                 } else {
                     this.$refs.tree.append(data, parentId);
                 }
+
+                // 重新排序操作
+                this.sortTreeNode(this.$refs.tree.getNode(data));
             },
 
             deleteTreeNode(data) {
                 this.$refs.tree.remove(data);
             },
 
-            editCategory(data, node) {
+            sortTreeNode(node) {
+
+            },
+
+            updateTreeNode(data) {
+                let node = this.$refs.tree.getNode(data);
+                node.data = data;
+
+                // 重新排序操作
+                this.sortTreeNode(node);
+            },
+
+            editCategoryBtn(data, node) {
                 if (data.level == 1) {
                     this.formDesc.categoryLevelName = '编辑一级分类';
                 } else {
@@ -199,6 +216,7 @@
                 this.formData.sort = data.sort;
                 this.formData.level = data.level;
                 this.formData.parentId = data.parentId;
+                this.formState.formOpt = 'edit';
             },
 
             deleteCategory(data, node) {
@@ -224,17 +242,53 @@
                 });
             },
 
+            addCategory() {
+                this.formState.saveButtonLoading = true;
+                this.formDesc.saveButtonName = '保存中';
+                addInfoCategory(this.formData).then(response => {
+                    this.addTreeNode(response.data.parentId, response.data);
+                    this.$message({
+                        message: '添加成功！',
+                        type: 'success'
+                    });
+                    this.formState.saveButtonLoading = false;
+                    this.formDesc.saveButtonName = '保存';
+                }).catch(() => {
+                    this.formState.saveButtonLoading = false;
+                    this.formDesc.saveButtonName = '保存';
+                })
+            },
+
+            editCategory() {
+                this.formState.saveButtonLoading = true;
+                this.formDesc.saveButtonName = '保存中';
+                updateInfoCategory(this.formData.id, this.formData).then(response => {
+                    this.updateTreeNode(response.data);
+                    this.$message({
+                        message: '修改成功！',
+                        type: 'success'
+                    });
+                    this.formState.saveButtonLoading = false;
+                    this.formDesc.saveButtonName = '保存';
+                }).catch(() => {
+                    this.formState.saveButtonLoading = false;
+                    this.formDesc.saveButtonName = '保存';
+                })
+            },
+
             onSubmit(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
-                        this.formState.saveButtonLoading = true;
-                        addInfoCategory(this.formData).then(response => {
-                            this.addTreeNode(response.data.parentId, response.data);
-                            console.log(response.data)
-                            this.formState.saveButtonLoading = false;
-                        }).catch(() => {
-                            this.formState.saveButtonLoading = false;
-                        })
+                        if (this.formState.formOpt == 'add') {
+                            this.addCategory();
+                        } else if (this.formState.formOpt == 'edit') {
+                            this.editCategory();
+                        } else {
+                            this.$message({
+                                message: '暂未支持的操作',
+                                type: 'warning'
+                            });
+                        }
                     } else {
                         this.$message({
                             message: '表单验证失败，请检查表单信息！',
@@ -242,7 +296,6 @@
                         });
                         return false;
                     }
-                    this.formState.saveButtonLoading = false;
                 });
             },
 
@@ -254,12 +307,12 @@
                             <div class="button-group pull-right">
                                 <el-button
                                         size="mini"
-                                        type="success" round on-click={ () => {this.addCategoryLevelTwo(node.data, node); return false;} }>添加子级</el-button >
+                                        type="success" round on-click={ (e) => {this.addCategoryLevelTwo(node.data, node); e.stopPropagation();}}>添加子级</el-button >
                                 <el-button
                                         size="mini"
-                                        type="danger" round on-click={ () => this.editCategory(node.data, node) }>编辑</el-button>
+                                        type="danger" round on-click={ (e) => {this.editCategoryBtn(node.data, node); e.stopPropagation();} }>编辑</el-button>
                                 <el-button
-                                        size="mini" round on-click={ () => this.deleteCategory(node.data, node) }>删除</el-button>
+                                        size="mini" round on-click={ (e) => {this.deleteCategory(node.data, node); e.stopPropagation();} }>删除</el-button>
                             </div>
                         </div>
                     );
@@ -270,9 +323,9 @@
                             <div class="button-group pull-right">
                                 <el-button
                                     size="mini"
-                                    type="danger" round on-click={ () => this.editCategory(node.data, node) }>编辑</el-button>
+                                    type="danger" round on-click={ (e) => {this.editCategoryBtn(node.data, node); e.stopPropagation();} }>编辑</el-button>
                                 <el-button
-                                     size="mini" round on-click={ () => this.deleteCategory(node.data, node) }>删除</el-button>
+                                     size="mini" round on-click={ (e) => {this.deleteCategory(node.data, node); e.stopPropagation();} }>删除</el-button>
                             </div>
                         </div>
                     );
