@@ -5,9 +5,12 @@
                 <div class="label-wrap category">
                     <label for="">分类：&nbsp;</label>
                     <div class="warp-content">
-                        <el-select placeholder="请选择活动区域">
-                            <el-option label="区域一" value="shanghai"></el-option>
-                            <el-option label="区域二" value="beijing"></el-option>
+                        <el-select placeholder="请选择活动区域" v-model="queryParam.category">
+                            <el-option
+                                v-for="categoryType in categoryTypeList"
+                                :key="categoryType.id"
+                                :value="categoryType.id"
+                                :label="categoryType.name"></el-option>
                         </el-select>
                     </div>
                 </div>
@@ -19,6 +22,7 @@
                         <el-date-picker
                                 style="width: 100%;"
                                 type="datetimerange"
+                                v-model="queryParam.dateTime"
                                 format="yyyy 年 MM 月 dd 日"
                                 value-format="yyyy-MM-dd HH:mm:ss"
                                 align="right"
@@ -33,21 +37,21 @@
                 <div class="label-wrap key-work">
                     <label for="">关键字：&nbsp;&nbsp;</label>
                     <div class="warp-content">
-                        <el-select placeholder="请选择活动区域">
-                            <el-option label="区域一" value="shanghai"></el-option>
-                            <el-option label="区域二" value="beijing"></el-option>
+                        <el-select placeholder="请选择分类" v-model="queryParam.fieldName">
+                            <el-option label="主键" value="id"></el-option>
+                            <el-option label="标题" value="title"></el-option>
                         </el-select>
                     </div>
                 </div>
             </el-col>
             <el-col :span="3">
-                <el-input></el-input>
+                <el-input v-model="queryParam.fieldValue"></el-input>
             </el-col>
             <el-col :span="2">
                 <el-button type="danger" style="width: 100%;">搜索</el-button>
             </el-col>
             <el-col :span="2">
-                <el-button type="danger" class="pull-right" style="width: 100%;">新增</el-button>
+                <el-button type="danger" class="pull-right" @click="addInfo" style="width: 100%;">新增</el-button>
             </el-col>
         </el-row>
         <div class="black-space-30"></div>
@@ -108,28 +112,55 @@
                     :total="400">
             </el-pagination>
         </el-row>
+
+        <!--列表新增对话框-->
+        <DialogInfoListAdd :dialog-visible="dialogVisible" @close="closeDialog"></DialogInfoListAdd>
     </div>
+
+
 
 </template>
 
 <script>
+    import DialogInfoListAdd from "@/components/info/dialog/DialogInfoListAdd";
+    import {getInfoCategoryListByLevel} from "@/api/infoCategory";
     export default {
         name: "InfoList",
+        components: {DialogInfoListAdd},
         data: function() {
             return {
-                tableHeight: window.innerHeight - 180 - 50 - 30,
+                queryParam: {
+                    category: '',
+                    dateTime: '',
+                    fieldName: 'id',
+                    fieldValue: ''
+                },
+                dialogVisible: false,
+                tableHeight: window.innerHeight - 180 - 50 - 35,
                 tableData: [{
                     date: '2016-05-03',
                     name: '王小虎',
                     address: '上海市普陀区金沙江路 1518 弄'
-                }, {
-                    date: '2016-05-03',
-                    name: '王小虎',
-                    address: '上海市普陀区金沙江路 1518 弄'
                 }],
-                multipleSelection: []
+                categoryTypeList: []
             }
+        },
+        methods: {
+            addInfo() {
+                this.dialogVisible = true;
+            },
 
+            closeDialog(state) {
+                this.dialogVisible = state;
+            },
+            getCategory() {
+                getInfoCategoryListByLevel(1).then(response => {
+                    this.categoryTypeList = response.data;
+                })
+            }
+        },
+        mounted() {
+            this.getCategory();
         }
     }
 </script>

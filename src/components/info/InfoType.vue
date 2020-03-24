@@ -130,18 +130,13 @@
             }
         },
 
-        // 创建后初始化一些数据
-        created() {
-            getInfoCategoryListByLevel(1).then((response) => {
-                this.data = response.data;
-            });
-        },
-
         methods: {
             loadChildData(node, resolve) {
                 // 系统在之前初始化第一级节点
                 if (node.level == 0) {
-                   return ;
+                    getInfoCategoryListByLevel(1).then((response) => {
+                        resolve(response.data)
+                    });
                 } else {
                     getInfoCategoryListByParentId(node.data.id).then((response) => {
                         resolve(response.data)
@@ -164,21 +159,24 @@
                 this.formDesc.categoryLevelName = '添加一级分类'
                 this.formData.level = 1;
                 this.formData.parentId = '';
+                this.formData.id = '';
                 this.formState.formOpt = "add";
-
+                this.$refs['categoryForm'].resetFields()
             },
 
             addCategoryLevelTwo(data, node) {
-                this.formDesc.categoryLevelName = '添加二级分类'
+                this.formDesc.categoryLevelName = `添加二级分类（${node.data.name}）`
                 this.formData.level = 2;
                 this.formData.parentId = data.id;
+                this.formData.id = '';
                 this.formState.formOpt = "add";
+                this.$refs['categoryForm'].resetFields()
             },
 
             addTreeNode(parentId, data) {
                 // 如果没有节点 则直接添加到根节点上
                 if (parentId == null) {
-                    this.data.push(data);
+                    this.$refs.tree.append(data, null);
                 } else {
                     this.$refs.tree.append(data, parentId);
                 }
@@ -192,12 +190,15 @@
             },
 
             sortTreeNode(node) {
-
+                node.parent.childNodes.sort((node1, node2) => {
+                    return node1.data.sort - node2.data.sort;
+                });
             },
 
             updateTreeNode(data) {
+                debugger;
                 let node = this.$refs.tree.getNode(data);
-                node.data = data;
+                node.setData(data);
 
                 // 重新排序操作
                 this.sortTreeNode(node);
@@ -253,6 +254,7 @@
                     });
                     this.formState.saveButtonLoading = false;
                     this.formDesc.saveButtonName = '保存';
+                    this.$refs['categoryForm'].resetFields()
                 }).catch(() => {
                     this.formState.saveButtonLoading = false;
                     this.formDesc.saveButtonName = '保存';
