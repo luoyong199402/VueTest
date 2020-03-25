@@ -57,9 +57,10 @@
         <div class="black-space-30"></div>
         <el-row>
             <el-table
+                    v-loading="tabLoading"
                     header-align="center"
                     ref="multipleTable"
-                    :data="tableData"
+                    :data="tableData.content"
                     border
                     tooltip-effect="dark"
                     stripe
@@ -74,27 +75,34 @@
                 <el-table-column
                         align="center"
                         header-align="center"
-                        label="标题"
-                        width="120">
-                    <template slot-scope="scope">123</template>
+                        label="序号"
+                        type="index"
+                        width="55">
                 </el-table-column>
                 <el-table-column
                         align="center"
                         header-align="center"
-                        prop="name"
+                        label="标题"
+                        prop="title"
+                        width="120">
+                </el-table-column>
+                <el-table-column
+                        align="center"
+                        header-align="center"
+                        prop="categoryName"
                         label="类别"
                         width="120">
                 </el-table-column>
                 <el-table-column
                         align="center"
                         header-align="center"
-                        prop="address"
+                        prop="createTime"
                         label="日期"
                         show-overflow-tooltip>
                 </el-table-column><el-table-column
                         align="center"
                         header-align="center"
-                        prop="address"
+                        prop="createUserName"
                         label="管理人"
                         show-overflow-tooltip>
                 </el-table-column>
@@ -105,25 +113,23 @@
             <el-pagination
                     class="pull-right"
                     style="height: 40px"
-                    :current-page="2"
+                    :current-page="tableData.pageNo + 1"
                     :page-sizes="[10, 20, 30, 40, 50, 100]"
-                    :page-size="20"
+                    :page-size="tableData.pageSize"
                     layout="total, sizes, prev, pager, next, jumper"
-                    :total="400">
+                    :total="tableData.total">
             </el-pagination>
         </el-row>
 
         <!--列表新增对话框-->
-        <DialogInfoListAdd :dialog-visible="dialogVisible" @close="closeDialog"></DialogInfoListAdd>
+        <DialogInfoListAdd :dialog-visible="dialogVisible" :category-type-list-pro="categoryTypeList" @close="closeDialog"></DialogInfoListAdd>
     </div>
-
-
-
 </template>
 
 <script>
     import DialogInfoListAdd from "@/components/info/dialog/DialogInfoListAdd";
     import {getInfoCategoryListByLevel} from "@/api/infoCategory";
+    import {queryInfo} from "@/api/info";
     export default {
         name: "InfoList",
         components: {DialogInfoListAdd},
@@ -137,11 +143,8 @@
                 },
                 dialogVisible: false,
                 tableHeight: window.innerHeight - 180 - 50 - 35,
-                tableData: [{
-                    date: '2016-05-03',
-                    name: '王小虎',
-                    address: '上海市普陀区金沙江路 1518 弄'
-                }],
+                tableData: {},
+                tabLoading: false,
                 categoryTypeList: []
             }
         },
@@ -157,10 +160,24 @@
                 getInfoCategoryListByLevel(1).then(response => {
                     this.categoryTypeList = response.data;
                 })
+            },
+
+            getPageList(query) {
+            // .param("page", "1")
+            //         .param("size", "2")
+            //         .param("sort", "id,desc")
+            //         .param("sort", "loginName")
+                this.tabLoading = true;
+                queryInfo(query).then(response => {
+                    this.tableData = response.data;
+                    this.tabLoading = false;
+                });
             }
         },
         mounted() {
             this.getCategory();
+            this.getPageList();
+
         }
     }
 </script>

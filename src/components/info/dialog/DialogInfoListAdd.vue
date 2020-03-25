@@ -4,12 +4,12 @@
             :visible.sync="dialogState"
             @close="close"
             width="580px">
-        <el-form :model="formData" ref="addInfoForm">
+        <el-form :model="formData" ref="addInfoForm" :rules="infoRules">
             <el-form-item
                     label="类别："
-                    prop="category"
+                    prop="categoryId"
                     :label-width="formConfig.formLabelWidth">
-                <el-select placeholder="请选择活动区域" v-model="formData.category">
+                <el-select placeholder="请选择分类" v-model="formData.categoryId">
                     <el-option
                         v-for="categoryType in categoryTypeList"
                         :key="categoryType.id"
@@ -35,13 +35,15 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
             <el-button @click="close">取消</el-button>
-            <el-button type="danger" @click="submit">确定</el-button>
+            <el-button type="danger" :loading="pageState.addButtonLoading" @click="submit('addInfoForm')">{{ pageState.addButtonLoadName }}</el-button>
         </div>
     </el-dialog>
 </template>
 
 <script>
     import {getInfoCategoryListByLevel} from "@/api/infoCategory";
+    import {validateNull} from "@/utils/validate";
+    import {addInfo} from "@/api/info";
 
     export default {
         name: "DialogInfoListAdd",
@@ -50,18 +52,58 @@
                 type: Boolean,
                 default: false
             },
+            categoryTypeListPro: {
+                type: Array,
+                default: []
+            }
         },
         data() {
+            const validateCategory = (rule, value, callback) => {
+                if (validateNull(value)) {
+                    callback(new Error('分类不能为空！'));
+                }
+                callback();
+            };
+
+            const validateTitle = (rule, value, callback) => {
+                if (validateNull(value)) {
+                    callback(new Error('标题不能为空！'));
+                }
+                callback();
+            };
+
+            const validateContent = (rule, value, callback) => {
+                if (validateNull(value)) {
+                    callback(new Error('内容不能为空！'));
+                }
+                callback();
+            };
+
             return {
                 formData: {
                     title: '',
                     content: '',
-                    category: ''
+                    categoryId: ''
                 },
                 formConfig: {
                     formLabelWidth: '70px'
                 },
+                infoRules: {
+                    category: [
+                        { validator: validateCategory, trigger: 'blur' }
+                    ],
+                    title: [
+                        { validator: validateTitle, trigger: 'blur' }
+                    ],
+                    content: [
+                        { validator: validateContent, trigger: 'blur' }
+                    ],
+                },
                 dialogState: false,
+                pageState: {
+                    addButtonLoading: false,
+                    addButtonLoadName: '新增'
+                },
                 categoryTypeList: []
             }
         },
@@ -71,24 +113,49 @@
                 this.$emit("close", false);
             },
 
-            submit() {
-
+            submit(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        this.addInfoByForm();
+                    } else {
+                        this.$message({
+                            message: '表单验证失败，请检查表单信息！',
+                            type: 'warning'
+                        });
+                        return false;
+                    }
+                });
             },
 
             getCategory() {
                 getInfoCategoryListByLevel(1).then(response => {
                     this.categoryTypeList = response.data;
                 })
+            },
+
+            addInfoByForm() {
+                this.pageState.addButtonLoading = true;
+                this.pageState.addButtonLoadName = '新增中';
+                addInfo(this.formData).then(() => {
+                    this.$message({
+                        message: '新增成功！',
+                        type: 'success'
+                    });
+                    this.$refs['addInfoForm'].resetFields();
+                    this.close();
+                }).finally(() => {
+                    this.pageState.addButtonLoading = false;
+                    this.pageState.addButtonLoadName = '新增';
+                });
             }
         },
         watch: {
             dialogVisible(newVal){
                 this.dialogState = newVal;
+            },
+            categoryTypeListPro(newVal) {
+                this.categoryTypeList = newVal;
             }
-        },
-
-        mounted() {
-            this.getCategory();
         }
 
     }
