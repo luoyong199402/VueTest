@@ -113,6 +113,11 @@
                 this.$emit("close", false);
             },
 
+            addSuccess(data) {
+                this.dialogState = false;
+                this.$emit("addSuccess", data);
+            },
+
             submit(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
@@ -136,13 +141,13 @@
             addInfoByForm() {
                 this.pageState.addButtonLoading = true;
                 this.pageState.addButtonLoadName = '新增中';
-                addInfo(this.formData).then(() => {
+                addInfo(this.formData).then((response) => {
                     this.$message({
                         message: '新增成功！',
                         type: 'success'
                     });
                     this.$refs['addInfoForm'].resetFields();
-                    this.close();
+                    this.addSuccess(response.data);
                 }).finally(() => {
                     this.pageState.addButtonLoading = false;
                     this.pageState.addButtonLoadName = '新增';

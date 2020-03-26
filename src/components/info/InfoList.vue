@@ -5,7 +5,7 @@
                 <div class="label-wrap category">
                     <label for="">分类：&nbsp;</label>
                     <div class="warp-content">
-                        <el-select placeholder="请选择活动区域" v-model="queryParam.category">
+                        <el-select placeholder="请选择活动区域" v-model="queryParam.category" clearable>
                             <el-option
                                 v-for="categoryType in categoryTypeList"
                                 :key="categoryType.id"
@@ -45,10 +45,10 @@
                 </div>
             </el-col>
             <el-col :span="3">
-                <el-input v-model="queryParam.fieldValue"></el-input>
+                <el-input v-model="queryParam.fieldValue" clearable></el-input>
             </el-col>
             <el-col :span="2">
-                <el-button type="danger" style="width: 100%;">搜索</el-button>
+                <el-button type="primary" style="width: 100%;" @click="getPageList">搜索</el-button>
             </el-col>
             <el-col :span="2">
                 <el-button type="danger" class="pull-right" @click="addInfo" style="width: 100%;">新增</el-button>
@@ -62,6 +62,7 @@
                     ref="multipleTable"
                     :data="tableData.content"
                     border
+                    @sort-change="tableChangeEvent"
                     tooltip-effect="dark"
                     stripe
                     :height="tableHeight"
@@ -83,6 +84,7 @@
                         align="center"
                         header-align="center"
                         label="标题"
+                        sortable="custom"
                         prop="title"
                         width="120">
                 </el-table-column>
@@ -91,6 +93,7 @@
                         header-align="center"
                         prop="categoryName"
                         label="类别"
+                        :filters="getFilterCategory()"
                         width="120">
                 </el-table-column>
                 <el-table-column
@@ -98,6 +101,7 @@
                         header-align="center"
                         prop="createTime"
                         label="日期"
+                        sortable="custom"
                         show-overflow-tooltip>
                 </el-table-column><el-table-column
                         align="center"
@@ -105,6 +109,17 @@
                         prop="createUserName"
                         label="管理人"
                         show-overflow-tooltip>
+                </el-table-column>
+                <el-table-column
+                    align="center"
+                    header-align="center"
+                    label="操作"
+                    width="180"
+                    show-overflow-tooltip>
+                    <template slot-scope="scope">
+                        <el-button type="primary" icon="el-icon-edit" circle></el-button>
+                        <el-button type="danger" icon="el-icon-delete" circle></el-button>
+                    </template>
                 </el-table-column>
             </el-table>
         </el-row>
@@ -117,12 +132,15 @@
                     :page-sizes="[10, 20, 30, 40, 50, 100]"
                     :page-size="tableData.pageSize"
                     layout="total, sizes, prev, pager, next, jumper"
-                    :total="tableData.total">
+                    :total="tableData.total"
+                    @size-change="sizeChangeEvent"
+                    @current-change="currentPageEvent">
             </el-pagination>
         </el-row>
 
         <!--列表新增对话框-->
-        <DialogInfoListAdd :dialog-visible="dialogVisible" :category-type-list-pro="categoryTypeList" @close="closeDialog"></DialogInfoListAdd>
+        <DialogInfoListAdd :dialog-visible="dialogVisible" :category-type-list-pro="categoryTypeList"
+                           @close="closeDialog" @addSuccess="getPageList"></DialogInfoListAdd>
     </div>
 </template>
 
@@ -144,6 +162,7 @@
                 dialogVisible: false,
                 tableHeight: window.innerHeight - 180 - 50 - 35,
                 tableData: {},
+                sortInfo: {},
                 tabLoading: false,
                 categoryTypeList: []
             }
@@ -159,19 +178,63 @@
             getCategory() {
                 getInfoCategoryListByLevel(1).then(response => {
                     this.categoryTypeList = response.data;
-                })
+                });
             },
 
-            getPageList(query) {
+            getPageList() {
             // .param("page", "1")
             //         .param("size", "2")
             //         .param("sort", "id,desc")
             //         .param("sort", "loginName")
+                // 添加查询条件
+                let query = {};
+                if (this.tableData.pageNo != null) {
+                    query.page = this.tableData.pageNo - 1;
+                    query.size = this.tableData.pageSize;
+                    query.categoryId = this.queryParam.category;
+                    query[this.queryParam.fieldName] = this.queryParam.fieldValue;
+
+                    // dateTime
+                    if (this.queryParam.dateTime != null) {
+                        query.createTimeStartTime = this.queryParam.dateTime[0];
+                        query.createTimeEndTime = this.queryParam.dateTime[1];
+                    }
+
+                    // 排序信息
+                    query.sort = this.sortInfo;
+                }
+
                 this.tabLoading = true;
                 queryInfo(query).then(response => {
                     this.tableData = response.data;
+                }).finally(() => {
                     this.tabLoading = false;
                 });
+            },
+
+            sizeChangeEvent(val) {
+                this.tableData.pageSize = val;
+                this.getPageList();
+            },
+            currentPageEvent(val) {
+                this.tableData.pageNo = val;
+                this.getPageList();
+            },
+            tableChangeEvent({column, prop, order}) {
+                if (order == null) {
+                    return ;
+                }
+                this.sortInfo = `${prop},${order == 'ascending' ? 'asc' : 'desc'}`
+                this.getPageList();
+            },
+            getFilterCategory() {
+                console.log("cat");
+                return this.categoryTypeList.map((data) => {
+                    return {
+                        text: data.name,
+                        value: data.id
+                    }
+                })
             }
         },
         mounted() {
