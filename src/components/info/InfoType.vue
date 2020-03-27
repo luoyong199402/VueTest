@@ -196,9 +196,8 @@
             },
 
             updateTreeNode(data) {
-                debugger;
                 let node = this.$refs.tree.getNode(data);
-                node.setData(data);
+                Object.assign(node.data, data);
 
                 // 重新排序操作
                 this.sortTreeNode(node);

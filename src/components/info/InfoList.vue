@@ -117,8 +117,8 @@
                     width="180"
                     show-overflow-tooltip>
                     <template slot-scope="scope">
-                        <el-button type="primary" icon="el-icon-edit" circle></el-button>
-                        <el-button type="danger" icon="el-icon-delete" circle></el-button>
+                        <el-button type="primary" icon="el-icon-edit" circle @click="editInfo(scope.row.id)"></el-button>
+                        <el-button type="danger" icon="el-icon-delete" circle @click="deleteInfo(scope.row.id)"></el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -139,18 +139,25 @@
         </el-row>
 
         <!--列表新增对话框-->
-        <DialogInfoListAdd :dialog-visible="dialogVisible" :category-type-list-pro="categoryTypeList"
+        <DialogInfoListAdd :dialog-visible="addItemDialogVisible" :category-type-list-pro="categoryTypeList"
                            @close="closeDialog" @addSuccess="getPageList"></DialogInfoListAdd>
+
+        <!--列表编辑对话框-->
+        <DialogInfoListEdit :dialog-visible="editItemDialogVisible"
+                            :category-type-list-pro="categoryTypeList"
+                            :editItemIdPro="editItemId"
+                           @close="closeDialog" @editSuccess="getPageList"></DialogInfoListEdit>
     </div>
 </template>
 
 <script>
     import DialogInfoListAdd from "@/components/info/dialog/DialogInfoListAdd";
+    import DialogInfoListEdit from "@/components/info/dialog/DialogInfoListEdit";
     import {getInfoCategoryListByLevel} from "@/api/infoCategory";
-    import {queryInfo} from "@/api/info";
+    import {deleteInfo as apiDeleteInfo, queryInfo} from "@/api/info";
     export default {
         name: "InfoList",
-        components: {DialogInfoListAdd},
+        components: {DialogInfoListAdd, DialogInfoListEdit},
         data: function() {
             return {
                 queryParam: {
@@ -159,21 +166,45 @@
                     fieldName: 'id',
                     fieldValue: ''
                 },
-                dialogVisible: false,
+                addItemDialogVisible: false,
+                editItemDialogVisible: false,
                 tableHeight: window.innerHeight - 180 - 50 - 35,
+                editItemId: -1,
                 tableData: {},
-                sortInfo: {},
+                sortInfo: '',
                 tabLoading: false,
                 categoryTypeList: []
             }
         },
         methods: {
             addInfo() {
-                this.dialogVisible = true;
+                this.addItemDialogVisible = true;
+            },
+
+            editInfo(id) {
+                this.editItemDialogVisible = true;
+                this.editItemId = id;
+            },
+
+            deleteInfo(id) {
+                this.$confirm("请确认是否删除！", '提示', {
+                    confirmButtonText: '删除',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(() => {
+                    return apiDeleteInfo(id)
+                }).then((response) => {
+                    this.$message({
+                        message: '删除成功！',
+                        type: 'success'
+                    });
+                    this.getPageList();
+                });
             },
 
             closeDialog(state) {
-                this.dialogVisible = state;
+                this.addItemDialogVisible = state;
+                this.editItemDialogVisible = state;
             },
             getCategory() {
                 getInfoCategoryListByLevel(1).then(response => {
@@ -182,10 +213,6 @@
             },
 
             getPageList() {
-            // .param("page", "1")
-            //         .param("size", "2")
-            //         .param("sort", "id,desc")
-            //         .param("sort", "loginName")
                 // 添加查询条件
                 let query = {};
                 if (this.tableData.pageNo != null) {
@@ -240,7 +267,6 @@
         mounted() {
             this.getCategory();
             this.getPageList();
-
         }
     }
 </script>
